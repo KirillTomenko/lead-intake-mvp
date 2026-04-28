@@ -1,0 +1,29 @@
+# Виртуальное окружение
+venv/
+env/
+.venv/
+
+# Кэш Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# База данных и логи (будут создаваться в контейнере)
+# leads.db
+# events.log
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Тесты и документация (опционально)
+test_*.py
+*.md

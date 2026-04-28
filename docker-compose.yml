@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  lead-intake:
+    build: .
+    container_name: lead-intake-mvp
+    ports:
+      - "8000:8000"  # Маппинг портов: хост:контейнер
+    volumes:
+      # Сохраняем базу данных и логи между перезапусками
+      - ./leads.db:/app/leads.db
+      - ./events.log:/app/events.log
+      # Монтируем папки для разработки (опционально)
+      - ./templates:/app/templates
+      - ./static:/app/static
+    env_file:
+      - .env  # Загружаем переменные окружения из .env
+    environment:
+      - PYTHONUNBUFFERED=1  # Отключаем буферизацию вывода Python
+    restart: unless-stopped  # Автоматический перезапуск при падении
+    networks:
+      - lead-network
+
+  # Опционально: PostgreSQL (если захочешь перейти с SQLite)
+  # postgres:
+  #   image: postgres:16-alpine
+  #   container_name: lead-intake-postgres
+  #   environment:
+  #     POSTGRES_DB: leadintake
+  #     POSTGRES_USER: admin
+  #     POSTGRES_PASSWORD: secure_password
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   ports:
+  #     - "5432:5432"
+  #   networks:
+  #     - lead-network
+
+networks:
+  lead-network:
+    driver: bridge
+
+# volumes:
+#   postgres_data:  # Раскомментируй, если используешь PostgreSQL

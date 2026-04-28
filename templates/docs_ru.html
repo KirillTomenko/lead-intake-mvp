@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    
+    <link rel="icon" type="image/png" href="/static/favicon.png">
+    
+    <title>📚 Документация API | Lead Intake</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+        .container { max-width: 1000px; margin: 0 auto; }
+        h1 { color: white; text-align: center; margin-bottom: 30px; font-size: 2.5em; }
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 25px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        .endpoint {
+            border-left: 4px solid #10b981;
+            padding: 20px;
+            margin-bottom: 20px;
+            background: #f9fafb;
+            border-radius: 8px;
+        }
+        .endpoint.get { border-left-color: #3b82f6; }
+        .endpoint.post { border-left-color: #10b981; }
+        .method {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 0.9em;
+            margin-right: 10px;
+        }
+        .method.get { background: #dbeafe; color: #1e40af; }
+        .method.post { background: #d1fae5; color: #065f46; }
+        .path { font-family: monospace; font-size: 1.2em; color: #1f2937; }
+        .description { margin-top: 10px; color: #6b7280; line-height: 1.6; }
+        
+        /* Кнопка "Попробовать" */
+        .try-btn {
+            margin-top: 15px;
+            padding: 8px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.95em;
+        }
+        .try-btn:hover { background: #556cd6; }
+        
+        /* Форма для тестирования */
+        .test-form {
+            display: none;
+            margin-top: 15px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            border: 2px solid #e5e7eb;
+        }
+        .test-form.show { display: block; }
+        .form-group { margin-bottom: 12px; }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #374151;
+        }
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 0.95em;
+        }
+        .send-btn {
+            background: #10b981;
+            color: white;
+            padding: 10px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .send-btn:hover { background: #059669; }
+        .cancel-btn {
+            background: #ef4444;
+            color: white;
+            padding: 10px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        
+        /* Ответ */
+        .response {
+            margin-top: 15px;
+            padding: 15px;
+            background: #1f2937;
+            color: #10b981;
+            border-radius: 8px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            display: none;
+        }
+        .response.show { display: block; }
+        .response.error { color: #ef4444; }
+        
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 8px;
+        }
+        .back-link:hover { background: rgba(255,255,255,0.3); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/" class="back-link">← На главную</a>
+        <h1>📚 Документация API</h1>
+        
+        <div class="card">
+            <h2 style="margin-bottom: 20px; color: #667eea;">🔧 Системные методы</h2>
+            
+            <div class="endpoint get">
+                <span class="method get">GET</span>
+                <span class="path">/health</span>
+                <div class="description">
+                    <strong>Проверка работоспособности</strong><br>
+                    Возвращает статус сервиса и версию.
+                </div>
+                <button class="try-btn" onclick="toggleTest('health')">🧪 Попробовать</button>
+                <div id="test-health" class="test-form">
+                    <button class="send-btn" onclick="sendRequest('health', 'GET', '/health')">📤 Отправить</button>
+                    <button class="cancel-btn" onclick="toggleTest('health')">✖ Отмена</button>
+                    <div id="response-health" class="response"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2 style="margin-bottom: 20px; color: #667eea;">📋 Методы работы с заявками</h2>
+            
+            <div class="endpoint post">
+                <span class="method post">POST</span>
+                <span class="path">/lead</span>
+                <div class="description">
+                    <strong>Создать новую заявку</strong><br>
+                    Принимает данные клиента, сохраняет в базу и отправляет уведомление.
+                </div>
+                <button class="try-btn" onclick="toggleTest('lead')">🧪 Попробовать</button>
+                <div id="test-lead" class="test-form">
+                    <div class="form-group">
+                        <label>name (необязательно):</label>
+                        <input type="text" id="lead-name" placeholder="Иван Иванов">
+                    </div>
+                    <div class="form-group">
+                        <label>contact (обязательно):</label>
+                        <input type="text" id="lead-contact" placeholder="+79990000000" required>
+                    </div>
+                    <div class="form-group">
+                        <label>source (необязательно):</label>
+                        <input type="text" id="lead-source" placeholder="сайт">
+                    </div>
+                    <div class="form-group">
+                        <label>comment (необязательно):</label>
+                        <textarea id="lead-comment" rows="2" placeholder="Нужна консультация"></textarea>
+                    </div>
+                    <button class="send-btn" onclick="sendLeadRequest()">📤 Отправить</button>
+                    <button class="cancel-btn" onclick="toggleTest('lead')">✖ Отмена</button>
+                    <div id="response-lead" class="response"></div>
+                </div>
+            </div>
+            
+            <div class="endpoint get">
+                <span class="method get">GET</span>
+                <span class="path">/leads</span>
+                <div class="description">
+                    <strong>Получить все заявки</strong><br>
+                    Возвращает список всех заявок из базы данных.
+                </div>
+                <button class="try-btn" onclick="toggleTest('leads')">🧪 Попробовать</button>
+                <div id="test-leads" class="test-form">
+                    <button class="send-btn" onclick="sendRequest('leads', 'GET', '/leads')">📤 Отправить</button>
+                    <button class="cancel-btn" onclick="toggleTest('leads')">✖ Отмена</button>
+                    <div id="response-leads" class="response"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card" style="text-align: center; padding: 20px;">
+            <p style="color: #6b7280;">
+                Также доступна: 
+                <a href="/docs" style="color: #667eea;">Swagger UI (английский)</a> 
+                | 
+                <a href="/redoc" style="color: #667eea;">ReDoc</a>
+            </p>
+        </div>
+    </div>
+    
+    <script>
+        // Показать/скрыть форму тестирования
+        function toggleTest(endpointId) {
+            const form = document.getElementById(`test-${endpointId}`);
+            form.classList.toggle('show');
+        }
+        
+        // Отправка простого GET запроса
+        async function sendRequest(responseId, method, url) {
+            const responseDiv = document.getElementById(`response-${responseId}`);
+            responseDiv.classList.remove('show');
+            
+            try {
+                const start = performance.now();
+                const res = await fetch(url, { method });
+                const end = performance.now();
+                const data = await res.json();
+                
+                const output = {
+                    status: res.status,
+                    time: `${Math.round(end - start)} ms`,
+                    data: data
+                };
+                
+                responseDiv.textContent = JSON.stringify(output, null, 2);
+                responseDiv.classList.remove('error');
+                responseDiv.classList.add('show');
+            } catch (error) {
+                responseDiv.textContent = `❌ Ошибка: ${error.message}`;
+                responseDiv.classList.add('error', 'show');
+            }
+        }
+        
+        // Отправка заявки (POST /lead)
+        async function sendLeadRequest() {
+            const responseDiv = document.getElementById('response-lead');
+            responseDiv.classList.remove('show');
+            
+            const payload = {
+                name: document.getElementById('lead-name').value,
+                contact: document.getElementById('lead-contact').value,
+                source: document.getElementById('lead-source').value,
+                comment: document.getElementById('lead-comment').value
+            };
+            
+            if (!payload.contact) {
+                responseDiv.textContent = '❌ Поле contact обязательно!';
+                responseDiv.classList.add('error', 'show');
+                return;
+            }
+            
+            try {
+                const start = performance.now();
+                const res = await fetch('/lead', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const end = performance.now();
+                const data = await res.json();
+                
+                const output = {
+                    status: res.status,
+                    time: `${Math.round(end - start)} ms`,
+                    data: data
+                };
+                
+                responseDiv.textContent = JSON.stringify(output, null, 2);
+                responseDiv.classList.remove('error');
+                responseDiv.classList.add('show');
+                
+                // Очистка формы
+                if (res.ok) {
+                    document.getElementById('lead-name').value = '';
+                    document.getElementById('lead-contact').value = '';
+                    document.getElementById('lead-source').value = '';
+                    document.getElementById('lead-comment').value = '';
+                }
+            } catch (error) {
+                responseDiv.textContent = `❌ Ошибка: ${error.message}`;
+                responseDiv.classList.add('error', 'show');
+            }
+        }
+    </script>
+</body>
+</html>

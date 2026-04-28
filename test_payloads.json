@@ -1,0 +1,60 @@
+[
+  {
+    "_case": "✅ Valid — full payload",
+    "name": "Ирина Смирнова",
+    "contact": "+79990001111",
+    "source": "landing",
+    "comment": "Хочу консультацию по тарифам"
+  },
+  {
+    "_case": "✅ Valid — contact only (all other fields optional)",
+    "contact": "irina@example.com"
+  },
+  {
+    "_case": "✅ Valid — Telegram handle as contact",
+    "name": "Алексей",
+    "contact": "@alexey_tg",
+    "source": "instagram",
+    "comment": null
+  },
+  {
+    "_case": "✅ Valid — source from referral",
+    "name": "Марина",
+    "contact": "+79001234567",
+    "source": "referral",
+    "comment": "Пришла от Ольги, интересует годовой план"
+  },
+  {
+    "_case": "✅ Valid — whitespace trimmed automatically",
+    "name": "  Дмитрий  ",
+    "contact": "  +79009999999  ",
+    "source": "  vk  ",
+    "comment": "   Хочу узнать цены   "
+  },
+  {
+    "_case": "❌ Invalid — contact field missing entirely",
+    "name": "Без контакта",
+    "source": "landing"
+  },
+  {
+    "_case": "❌ Invalid — contact is empty string",
+    "name": "Пустой контакт",
+    "contact": "",
+    "source": "landing"
+  },
+  {
+    "_case": "❌ Invalid — contact is only whitespace",
+    "name": "Пробелы",
+    "contact": "   ",
+    "source": "landing"
+  },
+  {
+    "_case": "❌ Invalid — contact is null",
+    "name": "Нулл",
+    "contact": null,
+    "source": "landing"
+  },
+  {
+    "_case": "❌ Invalid — completely empty body",
+  }
+]

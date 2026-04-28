@@ -1,0 +1,62 @@
+# === Python ===
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# === Virtual Environments ===
+venv/
+ENV/
+env/
+.venv
+
+# === IDE & Editors ===
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# === OS Files ===
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# === PROJECT SPECIFIC ===
+# 🔐 Секреты и конфиги (НИКОГДА не коммить!)
+.env
+.env.local
+.env.*.local
+
+# 🗄️ База данных и логи (создаются при запуске)
+leads.db
+leads.db-journal
+leads.db-wal
+leads.db-shm
+events.log
+*.log
+
+# 📥 Сгенерированные файлы экспорта
+*.csv
+uploads/
+
+# 🐳 Docker (артефакты сборки, сам .dockerignore оставляем в репо)
+.docker/

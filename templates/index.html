@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="/static/favicon.png">
+    <title>📋 Заявки | Lead Intake</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; color: #1f2937; }
+        .container { max-width: 1400px; margin: 0 auto; }
+        header { text-align: center; padding: 30px 0; color: white; }
+        header h1 { font-size: 2.2em; margin-bottom: 8px; }
+        header p { opacity: 0.9; font-size: 1.1em; }
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 25px; }
+        .stat { background: white; padding: 20px; border-radius: 12px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .stat-value { font-size: 2em; font-weight: bold; color: #667eea; }
+        .stat-label { color: #6b7280; font-size: 0.9em; }
+        .card { background: white; border-radius: 16px; padding: 25px; margin-bottom: 25px; box-shadow: 0 8px 25px rgba(0,0,0,0.15); }
+        .card h2 { color: #667eea; margin-bottom: 20px; font-size: 1.5em; }
+        .form-group { margin-bottom: 18px; }
+        label { display: block; margin-bottom: 6px; font-weight: 600; }
+        label .required { color: #ef4444; margin-left: 2px; }
+        input, textarea, select { width: 100%; padding: 12px 14px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 15px; }
+        input:focus, textarea:focus, select:focus { outline: none; border-color: #667eea; }
+        .btn { background: #667eea; color: white; border: none; padding: 14px 32px; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; margin-right: 10px; }
+        .btn:hover { background: #556cd6; }
+        .btn-success { background: #10b981; }
+        .btn-success:hover { background: #059669; }
+        .btn-outline { background: transparent; border: 2px solid #667eea; color: #667eea; }
+        .btn-outline:hover { background: #667eea; color: white; }
+        .alert { padding: 14px 18px; border-radius: 10px; margin-bottom: 18px; display: none; }
+        .alert.success { background: #d1fae5; color: #065f46; border: 1px solid #10b981; }
+        .alert.error { background: #fee2e2; color: #991b1b; border: 1px solid #ef4444; }
+        .filters { background: #f9fafb; padding: 20px; border-radius: 12px; margin-bottom: 20px; }
+        .filter-grid { display: grid; gap: 15px; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+        .filter-actions { display: flex; gap: 12px; margin-top: 15px; flex-wrap: wrap; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 14px; text-align: left; border-bottom: 1px solid #e5e7eb; }
+        th { background: #f9fafb; font-weight: 600; color: #6b7280; }
+        tr:hover { background: #f9fafb; }
+        .badge { display: inline-block; padding: 4px 10px; background: #dbeafe; color: #1e40af; border-radius: 6px; font-size: 0.85em; font-weight: 600; }
+        .empty { text-align: center; padding: 40px; color: #6b7280; font-style: italic; }
+        .chart-container { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
+        @media (max-width: 768px) { .chart-container { grid-template-columns: 1fr; } .filter-grid { grid-template-columns: 1fr; } }
+        footer { text-align: center; padding: 20px; color: white; opacity: 0.8; font-size: 0.9em; }
+        footer a { color: white; text-decoration: none; border-bottom: 1px dashed; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📋 Панель управления заявками</h1>
+            <p>Lead Intake MVP • Локальная версия</p>
+        </header>
+        
+        <!-- Статистика -->
+        <div class="stats">
+            <div class="stat"><div class="stat-value" id="statTotal">0</div><div class="stat-label">Всего</div></div>
+            <div class="stat"><div class="stat-value" id="statToday">0</div><div class="stat-label">За сегодня</div></div>
+            <div class="stat"><div class="stat-value" id="statFiltered">0</div><div class="stat-label">По фильтру</div></div>
+            <div class="stat"><div class="stat-value" id="statLast">–</div><div class="stat-label">Последний ID</div></div>
+        </div>
+        
+        <!-- Форма -->
+        <div class="card">
+            <h2>➕ Новая заявка</h2>
+            <div id="formAlert" class="alert"></div>
+            <form id="leadForm">
+                <div class="form-group"><label>Имя:</label><input type="text" id="name" placeholder="Иван Иванов"></div>
+                <div class="form-group"><label>Контакт <span class="required">*</span></label><input type="text" id="contact" placeholder="+79990000000" required></div>
+                <div class="form-group"><label>Источник:</label><input type="text" id="source" placeholder="сайт, телеграм"></div>
+                <div class="form-group"><label>Комментарий:</label><textarea id="comment" rows="3" placeholder="Что интересует?"></textarea></div>
+                <button type="submit" class="btn">💾 Сохранить</button>
+                <button type="button" class="btn btn-outline" onclick="loadLeads()">🔄 Обновить</button>
+            </form>
+        </div>
+        
+        <!-- Фильтры -->
+        <div class="card">
+            <h2>🔍 Фильтры и экспорт</h2>
+            <div class="filters">
+                <div class="filter-grid">
+                    <div><label>Дата от:</label><input type="date" id="filterDateFrom"></div>
+                    <div><label>Дата до:</label><input type="date" id="filterDateTo"></div>
+                    <div><label>Источник:</label><input type="text" id="filterSource" placeholder="сайт, телеграм..."></div>
+                </div>
+                <div class="filter-actions">
+                    <button class="btn" onclick="applyFilters()">🔍 Применить</button>
+                    <button class="btn btn-outline" onclick="clearFilters()">✖ Сбросить</button>
+                    <button class="btn btn-success" onclick="exportToCSV()">📥 Экспорт CSV</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Графики -->
+        <div class="card">
+            <h2>📊 Аналитика</h2>
+            <div class="chart-container">
+                <div><canvas id="chartByDate"></canvas></div>
+                <div><canvas id="chartBySource"></canvas></div>
+            </div>
+        </div>
+        
+        <!-- Таблица -->
+        <div class="card">
+            <h2>📋 Все заявки</h2>
+            <div id="tableAlert" class="alert" style="display:none;"></div>
+            <div style="overflow-x:auto;">
+                <table>
+                    <thead><tr><th>ID</th><th>Дата</th><th>Имя</th><th>Контакт</th><th>Источник</th><th>Комментарий</th></tr></thead>
+                    <tbody id="leadsBody"><tr><td colspan="6" class="empty">Загрузка...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+        
+        <footer>
+            <a href="/docs" target="_blank">🔧 Swagger API</a> • 
+            <a href="/docs-ru">📚 Документация</a> • v1.0.0
+        </footer>
+    </div>
+    
+    <script>
+        console.log('🚀 Dashboard script loaded');
+        
+        let currentFilters = { date_from: null, date_to: null, source: null };
+        let charts = {};
+        
+        async function loadLeads() {
+            console.log('📥 Loading leads...');
+            currentFilters = { date_from: null, date_to: null, source: null };
+            clearFilterInputs();
+            await fetchLeads();
+        }
+        
+        async function applyFilters() {
+            console.log('🔍 Applying filters...');
+            currentFilters.date_from = document.getElementById('filterDateFrom').value || null;
+            currentFilters.date_to = document.getElementById('filterDateTo').value || null;
+            currentFilters.source = document.getElementById('filterSource').value || null;
+            await fetchLeads();
+        }
+        
+        function clearFilters() {
+            console.log('🔄 Clearing filters...');
+            clearFilterInputs();
+            currentFilters = { date_from: null, date_to: null, source: null };
+            fetchLeads();
+        }
+        
+        function clearFilterInputs() {
+            document.getElementById('filterDateFrom').value = '';
+            document.getElementById('filterDateTo').value = '';
+            document.getElementById('filterSource').value = '';
+        }
+        
+        async function fetchLeads() {
+            try {
+                console.log('🌐 Fetching leads...');
+                const params = new URLSearchParams();
+                if (currentFilters.date_from) params.append('date_from', currentFilters.date_from);
+                if (currentFilters.date_to) params.append('date_to', currentFilters.date_to);
+                if (currentFilters.source) params.append('source', currentFilters.source);
+                
+                const url = params.toString() ? `/leads/filter?${params}` : '/leads';
+                console.log('📍 Request URL:', url);
+                
+                const res = await fetch(url);
+                console.log('📬 Response status:', res.status);
+                
+                if (!res.ok) {
+                    throw new Error(`HTTP error! status: ${res.status}`);
+                }
+                
+                const data = await res.json();
+                console.log('✅ Data received:', data);
+                
+                const leads = data.leads || [];
+                console.log('📊 Total leads:', leads.length);
+                
+                // Update stats
+                document.getElementById('statTotal').textContent = leads.length;
+                document.getElementById('statFiltered').textContent = leads.length;
+                const today = new Date().toISOString().slice(0, 10);
+                document.getElementById('statToday').textContent = leads.filter(l => l.created_at?.startsWith(today)).length;
+                if (leads.length) {
+                    document.getElementById('statLast').textContent = '#' + Math.max(...leads.map(l => l.id));
+                }
+                
+                // Render table
+                const tbody = document.getElementById('leadsBody');
+                if (!leads.length) {
+                    console.log('ℹ️ No leads found');
+                    tbody.innerHTML = '<tr><td colspan="6" class="empty">Нет заявок. Создайте первую! 🚀</td></tr>';
+                    return;
+                }
+                
+                tbody.innerHTML = leads.map(lead => {
+                    const date = lead.created_at ? new Date(lead.created_at).toLocaleString('ru-RU') : '–';
+                    return `<tr>
+                        <td><span class="badge">#${lead.id}</span></td>
+                        <td>${date}</td>
+                        <td>${lead.name||'–'}</td>
+                        <td><strong>${lead.contact}</strong></td>
+                        <td>${lead.source||'–'}</td>
+                        <td>${lead.comment||'–'}</td>
+                    </tr>`;
+                }).join('');
+                
+                console.log('✅ Table rendered successfully');
+                
+            } catch (e) {
+                console.error('❌ Error loading leads:', e);
+                const tbody = document.getElementById('leadsBody');
+                tbody.innerHTML = `<tr><td colspan="6" class="empty" style="color:#ef4444">
+                    ❌ Ошибка: ${e.message}<br>
+                    💡 Проверьте консоль (F12) для деталей
+                </td></tr>`;
+            }
+        }
+        
+        async function exportToCSV() {
+            const params = new URLSearchParams();
+            if (currentFilters.date_from) params.append('date_from', currentFilters.date_from);
+            if (currentFilters.date_to) params.append('date_to', currentFilters.date_to);
+            if (currentFilters.source) params.append('source', currentFilters.source);
+            const link = document.createElement('a');
+            link.href = `/leads/export/csv?${params}`;
+            link.download = `leads_${new Date().toISOString().slice(0,10)}.csv`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+        
+        async function loadCharts() {
+            try {
+                console.log('📊 Loading charts...');
+                const res = await fetch('/api/stats');
+                if (!res.ok) {
+                    console.warn('⚠️ Stats API returned:', res.status);
+                    return;
+                }
+                const stats = await res.json();
+                console.log('📈 Stats:', stats);
+                
+                // Destroy old charts
+                if (charts.byDate) charts.byDate.destroy();
+                if (charts.bySource) charts.bySource.destroy();
+                
+                // Chart by date - LINE CHART
+                const dateCtx = document.getElementById('chartByDate').getContext('2d');
+                charts.byDate = new Chart(dateCtx, {
+                    type: 'line',
+                    data: {  // ✅ FIX: Added "data:" key
+                        labels: Object.keys(stats.by_date),
+                        datasets: [{
+                            label: 'Заявок',
+                            data: Object.values(stats.by_date),  // ✅ FIX: Added "data:" key
+                            borderColor: '#667eea',
+                            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        }]
+                    },
+                    options: { 
+                        responsive: true, 
+                        plugins: { legend: { display: false } }, 
+                        scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } 
+                    }
+                });
+                
+                // Chart by source - DOUGHNUT CHART
+                const sourceCtx = document.getElementById('chartBySource').getContext('2d');
+                charts.bySource = new Chart(sourceCtx, {
+                    type: 'doughnut',
+                    data: {  // ✅ FIX: Added "data:" key
+                        labels: Object.keys(stats.by_source),
+                        datasets: [{
+                            data: Object.values(stats.by_source),  // ✅ FIX: Added "data:" key
+                            backgroundColor: ['#667eea', '#764ba2', '#f093fb', '#f5576c', '#4facfe', '#00f2fe']
+                        }]
+                    },
+                    options: { 
+                        responsive: true, 
+                        plugins: { legend: { position: 'bottom' } } 
+                    }
+                });
+                
+                console.log('✅ Charts rendered');
+            } catch (e) {
+                console.error('❌ Chart error:', e);
+            }
+        }
+        
+        // Form submission
+        document.getElementById('leadForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            console.log('📝 Form submitted');
+            
+            const alert = document.getElementById('formAlert');
+            const payload = {
+                name: document.getElementById('name').value,
+                contact: document.getElementById('contact').value,
+                source: document.getElementById('source').value,
+                comment: document.getElementById('comment').value
+            };
+            
+            console.log('📤 Sending payload:', payload);
+            
+            try {
+                const res = await fetch('/lead', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                console.log('📬 Response status:', res.status);
+                
+                if (res.ok) {
+                    const data = await res.json();
+                    console.log('✅ Lead created:', data);
+                    alert.className = 'alert success';
+                    alert.textContent = `✅ Заявка #${data.id} сохранена!`;
+                    alert.style.display = 'block';
+                    this.reset();
+                    setTimeout(() => { 
+                        alert.style.display = 'none'; 
+                        loadLeads(); 
+                        loadCharts(); 
+                    }, 1500);
+                } else {
+                    const err = await res.json();
+                    console.error('❌ Server error:', err);
+                    alert.className = 'alert error';
+                    alert.textContent = `❌ ${err.detail?.message || err.detail || 'Ошибка'}`;
+                    alert.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('❌ Network error:', error);
+                alert.className = 'alert error';
+                alert.textContent = '❌ Ошибка соединения с сервером';
+                alert.style.display = 'block';
+            }
+        });
+        
+        // Load on startup
+        window.addEventListener('DOMContentLoaded', () => {
+            console.log('🎯 DOM loaded, initializing...');
+            loadLeads();
+            loadCharts();
+        });
+    </script>
+</body>
+</html>
